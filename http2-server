@@ -86,8 +86,8 @@ require('./ssl').then(options => {
   } = http2.constants;
 
   const certs = {
-    key: options.key,
-    cert: options.key
+    key: fs.readFileSync(options.key || './certs/key.pem'),
+    cert: fs.readFileSync(options.cert || './certs/cert.pem')
   }
 
   const server = http2.createSecureServer(certs);

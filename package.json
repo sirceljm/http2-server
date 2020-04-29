@@ -9,19 +9,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/slavaGanzin/http2-server.git"
+    "url": "git+https://github.com/sirceljm/http2-server.git"
   },
   "keywords": [
     "http",
     "server",
     "http2"
   ],
-  "author": "slava.ganzin@gmail.com",
+  "author": "sircelj.m@gmail.com",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/slavaGanzin/http2-server/issues"
+    "url": "https://github.com/sirceljm/http2-server/issues"
   },
-  "homepage": "https://github.com/slavaGanzin/http2-server#readme",
+  "homepage": "https://github.com/sirceljm/http2-server#readme",
   "dependencies": {
     "commander": "^2.9.0",
     "cors": "^2.8.1",
