@@ -18,7 +18,6 @@ const {
 const onServerStart = () => {
   debugLog(`${serverType} server started on ${URL}`)
   debugLog(`Serve static from ${resolve(path)}`)
-  require('./open')()
 }
 
 const startRedirectServer = () =>
@@ -33,69 +32,67 @@ if (generateCert)
 if (trustCert)
   return require('./generateCertificates').trust()
 
-if (cors)
-  app.use(require('cors')())
-
-if (compression)
-  app.use(require('shrink-ray-current')())
-
-if (ssl && push)
-  require('./naivePush').map(x => app.use(x))
-
-if (!silent)
-  app.use(require('morgan')(log))
-
-app.use((req, res, next) => {
-  if (!cache) res.set('Cache-Control', 'no-cache')
-  next()
-})
-
-app.use(require('serve-static')(path, {
-  index, maxAge, cacheControl: Boolean(cache || maxAge)
-}))
-
-if (require('./options')['404']) {
-  const errorPage = require('fs').readFileSync(require('./options')['404'], 'utf-8')
-  app.use((req, res) => res.status(404).send(errorPage).end())
-}
-
-if (proxy) {
-  app.use((req, res) =>
-    require('http-proxy').createProxyServer({
-      secure: false,
-      xfwd: true,
-      changeOrigin: true,
-    }).web(req, res, { target: proxy })
-  )
-}
-
-if (autoindex)
-  app.use(require('serve-index')(path))
-
-require('./ssl').then(options => {
-  const http2 = require('http2');
-  const fs = require('fs');
-  const path = require('path');
-  const mime = require('mime-types');
-
-  const {
-    HTTP2_HEADER_PATH,
-    HTTP2_HEADER_METHOD,
-    HTTP_STATUS_NOT_FOUND,
-    HTTP_STATUS_INTERNAL_SERVER_ERROR
-  } = http2.constants;
-
-  const certs = {
-    key: fs.readFileSync(options.key || './certs/key.pem'),
-    cert: fs.readFileSync(options.cert || './certs/cert.pem')
-  }
-
-  const server = http2.createSecureServer(certs);
-
-  const serverRoot = "./";
+// if (cors)
+//   app.use(require('cors')())
+//
+// if (compression)
+//   app.use(require('shrink-ray-current')())
+//
+// if (ssl && push)
+//   require('./naivePush').map(x => app.use(x))
+//
+// if (!silent)
+//   app.use(require('morgan')(log))
+//
+// app.use((req, res, next) => {
+//   if (!cache) res.set('Cache-Control', 'no-cache')
+//   next()
+// })
+//
+// app.use(require('serve-static')(path, {
+//   index, maxAge, cacheControl: Boolean(cache || maxAge)
+// }))
+//
+// if (require('./options')['404']) {
+//   const errorPage = require('fs').readFileSync(require('./options')['404'], 'utf-8')
+//   app.use((req, res) => res.status(404).send(errorPage).end())
+// }
+//
+// if (proxy) {
+//   app.use((req, res) =>
+//     require('http-proxy').createProxyServer({
+//       secure: false,
+//       xfwd: true,
+//       changeOrigin: true,
+//     }).web(req, res, { target: proxy })
+//   )
+// }
+//
+// if (autoindex)
+//   app.use(require('serve-index')(path))
+//
+// require('./ssl').then(options => {
+//   const http2 = require('http2');
+//   const path = require('path');
+//   const mime = require('mime-types');
+//
+//   const {
+//     HTTP2_HEADER_PATH,
+//     HTTP2_HEADER_METHOD,
+//     HTTP_STATUS_NOT_FOUND,
+//     HTTP_STATUS_INTERNAL_SERVER_ERROR
+//   } = http2.constants;
+//
+//   const certs = {
+//     key: options.key || './certs/key.pem',
+//     cert: options.cert || './certs/cert.pem'
+//   };
+//
+//   const server = http2.createSecureServer(certs);
+//
+//   const serverRoot = "./";
 
   function respondToStreamError(err, stream) {
-    console.log(err);
     if (err.code === 'ENOENT') {
       stream.respond({ ":status": HTTP_STATUS_NOT_FOUND });
     } else {
@@ -105,39 +102,27 @@ require('./ssl').then(options => {
   }
 
   server.on('stream', (stream, headers) => {
-    console.log("sad", stream);
     const reqPath = headers[HTTP2_HEADER_PATH];
     const reqMethod = headers[HTTP2_HEADER_METHOD];
 
-    const fullPath = path.join(serverRoot, reqPath);
-    const responseMimeType = mime.lookup(fullPath);
+    let fullPath = path.join(serverRoot, reqPath);
+    let responseMimeType = mime.lookup(fullPath);
 
-    if (fullPath.endsWith(".html")) {
-      console.log('html');
-      // handle HTML file
-      stream.respondWithFile(fullPath, {
-        "content-type": "text/html"
-      }, {
-        onError: (err) => {
-          respondToStreamError(err, stream);
-        }
-      });
-
-    } else {
-      // handle static file
-      console.log(fullPath);
-      stream.respondWithFile(fullPath, {
-        'content-type': responseMimeType
-      }, {
-        onError: (err) => respondToStreamError(err, stream)
-      });
+    if (!responseMimeType) {
+      fullPath = path.join(fullPath, 'index.html');
+      responseMimeType = mime.lookup(fullPath);
     }
-
+    stream.respondWithFile(fullPath, {
+      'content-type': responseMimeType
+    }, {
+      onError: (err) => respondToStreamError(err, stream)
+    });
   });
 
   server.listen(ssl ? sslPort : httpPort);
 
-  // onServerStart();
-  if(ssl)
-    startRedirectServer()
-})
+  onServerStart();
+  if (ssl) {
+    startRedirectServer();
+  }
+});
