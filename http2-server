@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
-process.env.DEBUG = process.env.DEBUG || 'http2,http2:error*,ssl:certificate*'
+process.env.DEBUG = process.env.DEBUG || 'http2,http2:error*,ssl:certificate*';
 
-const app       = require('express')()
-const debugLog  = require('debug')('http2')
-const {resolve} = require('path')
+const koa       = require('koa');
+const debugLog  = require('debug')('http2');
+const {resolve} = require('path');
+
+const app = new koa();
 
 const {
   sslPort, httpPort, address, silent, push, cache, maxAge, trustCert,
@@ -20,10 +22,10 @@ const onServerStart = () => {
   debugLog(`Serve static from ${resolve(path)}`)
 }
 
-const startRedirectServer = () =>
-  require('express')()
-    .use(require('redirect-https')({port: sslPort}))
-    .listen(httpPort, () => debugLog(`Http redirects to https from ${httpPort}`))
+// const startRedirectServer = () =>
+//   require('express')()
+//     .use(require('redirect-https')({port: sslPort}))
+//     .listen(httpPort, () => debugLog(`Http redirects to https from ${httpPort}`))
 
 
 if (generateCert)
@@ -32,97 +34,63 @@ if (generateCert)
 if (trustCert)
   return require('./generateCertificates').trust()
 
-if (cors)
-  app.use(require('cors')())
+// if (cors)
+//   app.use(require('cors')())
+//
 
-if (compression)
-  app.use(require('shrink-ray-current')())
+// if (ssl && push)
+//   require('./naivePush').map(x => app.use(x))
+//
 
-if (ssl && push)
-  require('./naivePush').map(x => app.use(x))
+// if (!silent)
+//   app.use(require('morgan')(log))
+//
+// app.use((req, res, next) => {
+//   if (!cache) res.set('Cache-Control', 'no-cache')
+//   next()
+// })
+//
+// app.use(require('serve-static')(path, {
+//   index, maxAge, cacheControl: Boolean(cache || maxAge)
+// }))
+//
+// if (require('./options')['404']) {
+//   const errorPage = require('fs').readFileSync(require('./options')['404'], 'utf-8')
+//   app.use((req, res) => res.status(404).send(errorPage).end())
+// }
+//
+// if (proxy) {
+//   app.use((req, res) =>
+//     require('http-proxy').createProxyServer({
+//       secure: false,
+//       xfwd: true,
+//       changeOrigin: true,
+//     }).web(req, res, { target: proxy })
+//   )
+// }
+//
+// if (autoindex)
+//   app.use(require('serve-index')(path))
 
-if (!silent)
-  app.use(require('morgan')(log))
-
-app.use((req, res, next) => {
-  if (!cache) res.set('Cache-Control', 'no-cache')
-  next()
-})
-
-app.use(require('serve-static')(path, {
-  index, maxAge, cacheControl: Boolean(cache || maxAge)
-}))
-
-if (require('./options')['404']) {
-  const errorPage = require('fs').readFileSync(require('./options')['404'], 'utf-8')
-  app.use((req, res) => res.status(404).send(errorPage).end())
-}
-
-if (proxy) {
-  app.use((req, res) =>
-    require('http-proxy').createProxyServer({
-      secure: false,
-      xfwd: true,
-      changeOrigin: true,
-    }).web(req, res, { target: proxy })
-  )
-}
-
-if (autoindex)
-  app.use(require('serve-index')(path))
+app.use(require('koa-static')("./", {
+  gzip: compression,
+  br: compression
+}));
 
 require('./ssl').then(options => {
   const http2 = require('http2');
   const path = require('path');
-  const mime = require('mime-types');
-
-  const {
-    HTTP2_HEADER_PATH,
-    HTTP2_HEADER_METHOD,
-    HTTP_STATUS_NOT_FOUND,
-    HTTP_STATUS_INTERNAL_SERVER_ERROR
-  } = http2.constants;
 
   const certs = {
     key: options.key || path.join(__dirname, 'certs/key.pem'),
     cert: options.cert || path.join(__dirname, './certs/cert.pem')
   };
 
-  const server = http2.createSecureServer(certs, app);
-
-  const serverRoot = "./";
-
-  function respondToStreamError(err, stream) {
-    if (err.code === 'ENOENT') {
-      stream.respond({ ":status": HTTP_STATUS_NOT_FOUND });
-    } else {
-      stream.respond({ ":status": HTTP_STATUS_INTERNAL_SERVER_ERROR });
-    }
-    stream.end();
-  }
-
-  server.on('stream', (stream, headers) => {
-    const reqPath = headers[HTTP2_HEADER_PATH];
-    const reqMethod = headers[HTTP2_HEADER_METHOD];
-
-    let fullPath = path.join(serverRoot, reqPath);
-    let responseMimeType = mime.lookup(fullPath);
-
-    if (!responseMimeType) {
-      fullPath = path.join(fullPath, 'index.html');
-      responseMimeType = mime.lookup(fullPath);
-    }
-    stream.respondWithFile(fullPath, {
-      'content-type': responseMimeType
-    }, {
-      onError: (err) => respondToStreamError(err, stream)
-    });
-  });
-
-  server.listen(ssl ? sslPort : httpPort, address);
+  const server = http2.createSecureServer(certs, app.callback());
+  server.listen(ssl ? sslPort : httpPort);
 
   onServerStart();
-  if (ssl) {
-    startRedirectServer();
-  }
+  // if (ssl) {
+  //   startRedirectServer();
+  // }
 });
