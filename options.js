@@ -48,7 +48,7 @@ const opts = commander
   ).option(
     '-S, --no-ssl',
     `disable https
-      Works as plain http server without http2, spdy, push_promise
+      Works as plain http server without http2, push_promise
 `
   ).option(
     '-e, --cert [certs/cert.pem]',

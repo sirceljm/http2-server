@@ -23,9 +23,6 @@ const getOptions = ({certificate, clientKey}) => {
     key: clientKey,
     cert: certificate,
     ssl,
-    spdy: {
-      plain: !ssl,
-    },
     agent: false,
     strictSSL: false
   }

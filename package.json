@@ -1,7 +1,7 @@
 {
   "name": "static-http2-server",
   "version": "1.7.5",
-  "description": "Simple http2/spdy static server",
+  "description": "Simple http2 static server",
   "scripts": {
     "start": "node-dev http2-server",
     "test": "node tests/run.js",
@@ -14,8 +14,7 @@
   "keywords": [
     "http",
     "server",
-    "http2",
-    "spdy"
+    "http2"
   ],
   "author": "slava.ganzin@gmail.com",
   "license": "ISC",
@@ -29,13 +28,13 @@
     "debug": "^2.2.0",
     "express": "^4.14.0",
     "http-proxy": "^1.16.2",
+    "mime-types": "^2.1.27",
     "morgan": "^1.7.0",
     "opn": "^4.0.2",
     "pem": "^1.8.3",
     "redirect-https": "^1.1.0",
     "serve-index": "^1.8.0",
-    "shrink-ray-current": "^4.0.0",
-    "spdy": "^3.4.2"
+    "shrink-ray-current": "^4.0.0"
   },
   "bin": {
     "http2-server": "http2-server"

@@ -5,9 +5,7 @@
 <!-- [![](https://david-dm.org/slavaGanzin/http2-server.svg)](https://david-dm.org/slavaGanzin/http2-server) -->
 
 # http2-server
-Simple HTTP2/SPDY server similiar to [http-server](https://github.com/indexzero/http-server) using [express](https://github.com/expressjs/express) & [node-spdy](https://github.com/indutny/node-spdy)
-
-*Due to issues in [node-spdy](https://github.com/spdy-http2/node-spdy/issues/363) http2-server will not work on Node 12 or above. If someone want to fix this we all will appreciate your work*
+Simple HTTP2 server similiar to [http-server](https://github.com/indexzero/http-server) using [express](https://github.com/expressjs/express)
 
 # Installation
 ```
@@ -47,7 +45,7 @@ http2-server [path] [options]
     -s, --silent                      suppress log messages from output
     --cors                            enable CORS
     -S, --no-ssl                      disable https
-          Works as plain http server without http2, spdy, push_promise
+          Works as plain http server without http2, push_promise
 
     -e, --cert [certs/cert.pem]       path to ssl cert file
     -k, --key  [certs/key.pem]        path to ssl key file
