@@ -9,7 +9,7 @@ const readCertificates = () => {
     fs.statSync(key)
     fs.statSync(cert)
   } catch (e) {
-    sslError(`Certificates was not found: ${key} or ${cert}. Please review: https://github.com/slavaGanzin/http2-server#ssl-certificates`)
+    sslError(`Certificates was not found: ${key} or ${cert}. Please review: https://github.com/sirceljm/http2-server#ssl-certificates`)
     process.exit(0)
   }
   return Promise.resolve({
