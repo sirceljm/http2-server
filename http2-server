@@ -83,7 +83,8 @@ require('./ssl').then(options => {
 
   const certs = {
     key: options.key || path.join(__dirname, 'certs/key.pem'),
-    cert: options.cert || path.join(__dirname, './certs/cert.pem')
+    cert: options.cert || path.join(__dirname, 'certs/cert.pem'),
+    allowHTTP1: true
   };
 
   const server = http2.createSecureServer(certs, app.callback());
